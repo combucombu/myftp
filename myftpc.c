@@ -384,8 +384,8 @@ int get(int sock, char *av[], int path_num)
 			fwrite(buf, header.length * sizeof(char), 1, fp);
 			
 			if (header.code == 0x00) {
-				putc('\0', fp);
-				fprintf(stderr, "break\n");
+				fputc('\0', fp);
+fprintf(stderr, "break\n");
 				break;
 			}
 		}
@@ -411,6 +411,76 @@ int get(int sock, char *av[], int path_num)
 
 int put(int sock, char *av[], int path_num)
 {
+	int i, n;
+	char path[PATH_SIZE];
+	char buf[BUF_SIZE];
+	struct myftph header;
+	FILE *fp;
+
+	if (path_num == 2) {
+		strcpy(path, av[2]);
+	} else if (path_num == 1) {
+		strcpy(path, av[1]);
+	} else {
+		fprintf(stderr, "Usage: put <input file> [output file]\n");
+		return 1;
+	}
+
+	if (access(av[1], F_OK) == 0) {
+		if (access(av[1], R_OK) == 0) {
+			header.type = 0x06;
+			header.code = 0x00;
+			header.length = strlen(path);;
+			write(sock, &header, sizeof(header));
+
+
+			write(sock, &path, header.length * sizeof(char));
+			read(sock, &header, sizeof(header));
+			if (header.type == 0x10) {
+				if ((fp = fopen(av[1], "r")) == NULL) {
+					fprintf(stderr, "cannot open file\n");
+					return 1;
+				}
+				for (;;) {
+					n = fread(buf, sizeof(char), BUF_SIZE, fp);
+					if (n < BUF_SIZE) {
+						break;
+					}
+					header.type = 0x20;
+					header.code = 0x01;
+					header.length = BUF_SIZE;
+
+					write(sock, &header, sizeof(header));
+					write(sock, &buf, BUF_SIZE * sizeof(char));
+				}
+				fprintf(stderr, "did break\n");
+				header.type = 0x20;
+				header.code = 0x00;
+				header.length = n;
+				write(sock, &header, sizeof(header));
+				write(sock, &buf, n * sizeof(char));
+				fclose(fp);
+				return 0;
+			} else if (header.type == 0x12) {
+				//erorr
+				if (header.code == 0x00) {
+					fprintf(stderr, "File does not exist\n");
+					return 1;
+				} else if (header.code == 0x01) {
+					fprintf(stderr, "No access authorization\n");
+					return 1;
+				}
+			}
+		} else {
+			// no access authorization
+			fprintf(stderr, "No file access authorization\n");
+			return 1;
+		}
+	} else {
+		// no such a file
+		fprintf(stderr, "No such a file\n");
+		return 1;
+	}	
 	return 0;
 }
 

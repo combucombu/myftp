@@ -291,6 +291,39 @@ int get(int sock, int length)
 
 int put(int sock, int length)
 {
+	int i, n;
+	char path[PATH_SIZE];
+	char buf[BUF_SIZE];
+	struct myftph header;
+	FILE *fp;
+
+	read(sock, &path, length * sizeof(char));
+	path[length] = '\0';
+	if ((fp = fopen(path, "w")) == NULL) {
+		fprintf(stderr, "cannot open file\n");
+		header.type = 0x12;
+		header.code = 0x01;
+		header.length = 0;
+		write(sock, &header, sizeof(header));
+		return 1;
+	}
+	header.type = 0x10;
+	header.code = 0x00;
+	header.length = 0;
+	write(sock, &header, sizeof(header));
+	for (;;) {
+		read(sock, &header, sizeof(header));
+		n = read(sock, &buf, header.length * sizeof(char));
+
+		fwrite(buf, header.length * sizeof(char), 1, fp);
+
+		if (header.code == 0x00) {
+			fputc('\0', fp);
+			fprintf(stderr, "break\n");
+			break;
+		}
+	}
+	fclose(fp);
 	return 0;
 }
 
