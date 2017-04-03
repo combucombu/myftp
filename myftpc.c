@@ -66,10 +66,13 @@ int main(int argc, char* argv[])
 	//connect requset to server
 	connect(sock, (struct sockaddr *)&server, sizeof(server));
 
+	/*
 	//receive date from server
 	memset(message, 0, sizeof(message));
 	n = read(sock, message, sizeof(message));
 	printf("%d, %s\n", n, message);
+	*/
+
 	//send and receive loop
 	for (;;) {
 		//get command
@@ -122,9 +125,11 @@ int splitCmd(char* command, char* av[])
 			}
 		}
 	}
+	/*
 	for (i = 0; i < j; i++) {
 		fprintf(stderr, "av[%d] = %s\n", i, av[i]);
 	}
+	*/
 	return j;
 }
 int ftp(char* command, int sock)
@@ -135,7 +140,7 @@ int ftp(char* command, int sock)
 	ac = splitCmd(command, av);
 	path_num = ac -1;
 	
-	fprintf(stderr, "path_num = %d\n", path_num);
+	//fprintf(stderr, "path_num = %d\n", path_num);
 
 	if (strcmp(av[0], "quit") == 0) {
 		quit(sock);
@@ -203,8 +208,10 @@ int quit(int sock)
 	write(sock, &header, sizeof(header));
 	read(sock, &header, sizeof(header));
 		
+	/*
 	fprintf(stderr, "received reply\n");
 	fprintf(stderr, "header type = 0x%02x\n", header.type);
+	*/
 
 	return 1;
 }
@@ -234,7 +241,7 @@ int cd(int sock, char* av[])
 	struct myftph header;
 	char path[PATH_SIZE];
 
-	fprintf(stderr, "here is cd\n");
+	//fprintf(stderr, "here is cd\n");
 
 	header.type = 0x03;
 	header.code = 0x00;
@@ -248,7 +255,6 @@ int cd(int sock, char* av[])
 	write(sock, &path, header.length * sizeof(char));
 	read(sock, &header, sizeof(header));
 	if (header.type == 0x10) {
-		fprintf(stdout, "changed directory\n");
 	} else if (header.type == 0x12) {
 		if (header.code == 0x00) {
 			fprintf(stderr, "No such a directory: %s\n", path);
@@ -292,9 +298,7 @@ int lpwd()
 {	
 	char path[PATH_SIZE];
 
-	if (access(path, F_OK) == 0) {
-		getcwd(path, PATH_SIZE);
-	}
+	getcwd(path, PATH_SIZE);
 
 	fprintf(stdout, "%s\n", path);	
 	return 0;
@@ -308,7 +312,6 @@ int lcd(char *av[])
 
 	if (access(path, F_OK) == 0) {
 		if (chdir(path) == 0) {
-			fprintf(stdout, "changed directory\n");
 			return 0;
 		} else {
 			fprintf(stderr, "No access authorization: %s\n", path);
@@ -372,7 +375,7 @@ int get(int sock, char *av[], int path_num)
 				fprintf(stderr, "cannot open file %s", av[2]);
 				return 2;
 			}
-			fprintf(stderr, "opened %s\n", av[2]);
+			//fprintf(stderr, "opened %s\n", av[2]);
 		}
 		for (i = 1;; i++) {
 			if (i % 10000 ==0) {
@@ -385,7 +388,7 @@ int get(int sock, char *av[], int path_num)
 			
 			if (header.code == 0x00) {
 				fputc('\0', fp);
-fprintf(stderr, "break\n");
+				//fprintf(stderr, "break\n");
 				break;
 			}
 		}
@@ -453,7 +456,7 @@ int put(int sock, char *av[], int path_num)
 					write(sock, &header, sizeof(header));
 					write(sock, &buf, BUF_SIZE * sizeof(char));
 				}
-				fprintf(stderr, "did break\n");
+				//fprintf(stderr, "did break\n");
 				header.type = 0x20;
 				header.code = 0x00;
 				header.length = n;

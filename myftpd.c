@@ -69,7 +69,7 @@ int main(int argc, char* argv[])
 		sock = accept(sock0, (struct sockaddr *)&client, &cliAddrLen); 
 		fprintf(stdout, "connected client %s\n", 
 				inet_ntoa(client.sin_addr));
-		write(sock, "HELLO", 5);
+		//write(sock, "HELLO", 5);
 		
 		if ((pid = fork()) == 0) {
 			//child
@@ -111,8 +111,10 @@ int ftp(int sock)
 
 	read(sock, &header, sizeof(header));
 
+	/*
 	fprintf(stderr, "received message\n");
 	fprintf(stderr, "header.type = 0x%02x\n", header.type);
+	*/
 
 	if (header.type == 0x01) {
 		return quit(sock);
@@ -150,7 +152,7 @@ int pwd(int sock)
 	char path[PATH_SIZE];
 
 	getcwd(path, PATH_SIZE);
-	fprintf(stderr, "path = %s\n", path);
+	//fprintf(stderr, "path = %s\n", path);
 
 	header.type = 0x10;
 	header.code = 0x00;
@@ -259,7 +261,7 @@ int get(int sock, int length)
 				write(sock, &header, sizeof(header));
 				write(sock, &buf, BUF_SIZE * sizeof(char));
 			}
-			fprintf(stderr, "did break\n");
+			//fprintf(stderr, "did break\n");
 			header.type = 0x20;
 			header.code = 0x00;
 			header.length = n;
@@ -319,7 +321,7 @@ int put(int sock, int length)
 
 		if (header.code == 0x00) {
 			fputc('\0', fp);
-			fprintf(stderr, "break\n");
+			//fprintf(stderr, "break\n");
 			break;
 		}
 	}
