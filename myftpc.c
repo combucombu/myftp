@@ -9,7 +9,7 @@
 
 
 #define CMD_MAX 256
-#define PATH_SIZE 256
+#define PATH_SIZE 4096
 #define BUF_SIZE 1024
 int getCmd(char *);
 int splitCmd(char *command, char* av[]);
@@ -271,6 +271,7 @@ int dir(int sock, char *av[], int path_num)
 {
 	struct myftph header;
 	char path[PATH_SIZE];
+	char *data;
 
 	header.type = 0x04;
 	header.code = 0x00;
@@ -288,9 +289,13 @@ int dir(int sock, char *av[], int path_num)
 	}
 
 	read(sock, &header, sizeof(header));
-	read(sock, &path, header.length * sizeof(char));
-	path[header.length] = '\0';
-	fprintf(stdout, "%s\n", path);
+	if ((data = (char *)malloc(header.length * sizeof(char))) == NULL) {
+		fprintf(stderr, "Cannot allocate %d Byte\n", header.length);
+		exit(1);
+	}
+	read(sock, data, header.length * sizeof(char));
+	fprintf(stdout, "%s\n", data);
+	free(data);
 	return 0;
 }
 

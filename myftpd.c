@@ -229,7 +229,7 @@ int dir(int sock, int length)
 
 int get(int sock, int length)
 { 
-	int i, n;
+	int n;
 	char path[PATH_SIZE];
 	char buf[BUF_SIZE];
 	struct myftph header;
@@ -293,7 +293,7 @@ int get(int sock, int length)
 
 int put(int sock, int length)
 {
-	int i, n;
+	int n;
 	char path[PATH_SIZE];
 	char buf[BUF_SIZE];
 	struct myftph header;
